@@ -76,6 +76,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="SystemParamManager.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -84,16 +85,18 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Converters\BoolToInvertConverter.cs" />
     <Compile Include="DataAcquisition.cs" />
     <Compile Include="DhfLib\Communication\IModbusRtu.cs" />
     <Compile Include="DhfLib\Communication\ModbusRtu.cs" />
+    <Compile Include="DhfLib\Serialization\JsonSerialization.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OpticalApplication.cs" />
+    <Compile Include="MessageRaisedEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

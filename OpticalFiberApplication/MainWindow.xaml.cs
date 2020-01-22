@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,7 +28,18 @@ namespace OpticalFiberApplication
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel();
+            var mode = new MainWindowViewModel();
+            DataContext = mode;
+            mode.MessageRaised += Mode_MessageRaised;
+        }
+        /// <summary>
+        /// 消息触发
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Mode_MessageRaised(object sender, MessageRaisedEventArgs e)
+        {
+            MessageBox.Show(e.Message);
         }
 
         /// <summary>
@@ -61,22 +73,53 @@ namespace OpticalFiberApplication
 
     public class MainWindowViewModel : Screen
     {
+        #region 初始化
+
+        /// <summary>
+        /// 数据采集类
+        /// </summary>
         DataAcquisition acquisition = new DataAcquisition();
 
-        #region 初始化
+        /// <summary>
+        /// 系统参数管理器
+        /// </summary>
+        SystemParamManager paramManager;
 
         public MainWindowViewModel()
         {
-            //更新串口
-            SerialPorts = new ObservableCollection<string>(SerialPort.GetPortNames());
-            if (SerialPorts?.Count > 0)
-            {
-                SerialPortName = SerialPorts[0];
-            }
+            
+            
         }
 
+        /// <summary>
+        /// 加载事件
+        /// </summary>
         public void Loaded()
         {
+            //更新串口
+            SerialPorts = new ObservableCollection<string>(SerialPort.GetPortNames());
+
+            paramManager = SystemParamManager.GetInstance();
+            paramManager.LoadParams();
+
+            if (SerialPorts.Contains(paramManager.SystemParam.SerialPortName))
+            {
+                SerialPortName = paramManager.SystemParam.SerialPortName;
+            }
+            else
+            {
+                if (SerialPorts.Count > 0)
+                {
+                    SerialPortName = SerialPorts[0];
+                }
+            }
+
+            EnableChannelCount = paramManager.SystemParam.EnableChannelCount;
+            DatumChannel = paramManager.SystemParam.DatumChannel;
+            TriggerChannel = paramManager.SystemParam.TriggerChannel;
+            MaxError = paramManager.SystemParam.MaxError;
+            ConverteScale = paramManager.SystemParam.ConverteScale;
+
             //更新串口
             //SerialPorts = new ObservableCollection<string>(SerialPort.GetPortNames());
             //if (SerialPorts?.Count > 0)
@@ -119,6 +162,9 @@ namespace OpticalFiberApplication
             set
             {
                 acquisition.SerialPortName = value;
+                NotifyOfPropertyChange(() => SerialPortName);
+                paramManager.SystemParam.SerialPortName = value;
+                paramManager.SaveParams();
             }
         }
 
@@ -126,7 +172,7 @@ namespace OpticalFiberApplication
 
         #region 配置参数
 
-        private int datumChannel;
+        private int datumChannel = 0;
 
         /// <summary>
         /// 基准通道
@@ -134,10 +180,22 @@ namespace OpticalFiberApplication
         public int DatumChannel
         {
             get { return datumChannel; }
-            set { datumChannel = value; NotifyOfPropertyChange(() => DatumChannel); }
+            set 
+            {
+                datumChannel = value;
+                NotifyOfPropertyChange(() => DatumChannel);
+                paramManager.SystemParam.DatumChannel = datumChannel; 
+                paramManager.SaveParams();
+
+                if (value >= EnableChannelCount)
+                {
+                    OnMessageRaised(MessageLevel.Err, "基准通道必须为有效的通道!");
+                    //DatumChannel = EnableChannelCount - 1;
+                }
+            }
         }
 
-        private int triggerChannel;
+        private int triggerChannel = 7;
 
         /// <summary>
         /// 触发通道
@@ -145,10 +203,11 @@ namespace OpticalFiberApplication
         public int TriggerChannel
         {
             get { return triggerChannel; }
-            set { triggerChannel = value; NotifyOfPropertyChange(() => TriggerChannel); }
+            set { triggerChannel = value; NotifyOfPropertyChange(() => TriggerChannel);
+                paramManager.SystemParam.TriggerChannel = value; paramManager.SaveParams(); }
         }
 
-        private int enableChannelCount;
+        private int enableChannelCount = 4;
 
         /// <summary>
         /// 使能通道的数量
@@ -160,6 +219,8 @@ namespace OpticalFiberApplication
             { 
                 enableChannelCount = value; 
                 NotifyOfPropertyChange(() => EnableChannelCount);
+                paramManager.SystemParam.EnableChannelCount = value;
+                paramManager.SaveParams();
 
                 //设置通道
                 ChannelColor0 = (EnableChannelCount > 0) ? Brushes .Green: Brushes.LightGray;
@@ -181,7 +242,8 @@ namespace OpticalFiberApplication
         public double MaxError
         {
             get { return maxError; }
-            set { maxError = value; NotifyOfPropertyChange(() => MaxError); }
+            set { maxError = value; NotifyOfPropertyChange(() => MaxError);
+                paramManager.SystemParam.MaxError = value; paramManager.SaveParams(); }
         }
 
         private double converteScale = 0.1;
@@ -192,7 +254,8 @@ namespace OpticalFiberApplication
         public double ConverteScale
         {
             get { return converteScale; }
-            set { converteScale = value; NotifyOfPropertyChange(() => ConverteScale); }
+            set { converteScale = value; NotifyOfPropertyChange(() => ConverteScale);
+                paramManager.SystemParam.ConverteScale = value; paramManager.SaveParams(); }
         }
 
         #endregion
@@ -622,7 +685,43 @@ namespace OpticalFiberApplication
 
         #endregion
 
+        #region 事件
+
+        /// <summary>
+        /// 消息触发事件
+        /// </summary>
+        public event EventHandler<MessageRaisedEventArgs> MessageRaised;
+
+        /// <summary>
+        /// 触发消息触发事件
+        /// </summary>
+        /// <param name="messageLevel"></param>
+        /// <param name="message"></param>
+        /// <param name="exception"></param>
+        protected void OnMessageRaised(MessageLevel messageLevel, string message, Exception exception = null)
+        {
+            MessageRaised?.Invoke(this, new MessageRaisedEventArgs(messageLevel, message, exception));
+        }
+
+        #endregion
+
         #region 应用
+
+        private bool isMesuring;
+
+        /// <summary>
+        /// 测量标志
+        /// </summary>
+        public bool IsMesurig
+        {
+            get { return isMesuring; }
+            set { isMesuring = value; NotifyOfPropertyChange(() => IsMesurig); }
+        }
+
+        /// <summary>
+        /// 停止标志位
+        /// </summary>
+        private bool _shouldStop = false;
 
         /// <summary>
         /// 检测数据
@@ -705,12 +804,62 @@ namespace OpticalFiberApplication
                 }
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                //触发报警信号
+                OnMessageRaised( MessageLevel.Err, ex.Message);
             }
             
+        }
+
+        /// <summary>
+        /// 开始触发采集
+        /// </summary>
+        public void StartTrigger()
+        {
+            if (IsMesurig)
+            {
+                return;
+            }
+
+            _shouldStop = false;
+
+            //开线程
+            new Thread(()=>
+            {
+                IsMesurig = true;
+
+                while (!_shouldStop)
+                {
+                    double voltage = -1;
+                    try
+                    {
+                        voltage = acquisition.GetAnalogChannel(TriggerChannel);
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        //触发报警信号
+                        OnMessageRaised(MessageLevel.Err, ex.Message);
+                        break;
+                    }
+                    if (voltage > 5)
+                    {
+                        StartOneshot();
+                    }
+                }
+
+                IsMesurig = false;
+            }).Start();
+
+        }
+
+        /// <summary>
+        /// 停止触发
+        /// </summary>
+        public void StopTrigger()
+        {
+            _shouldStop = true;
         }
 
         /// <summary>

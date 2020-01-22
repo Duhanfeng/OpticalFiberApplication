@@ -5,10 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OpticalFiberApplication"
         xmlns:cal="http://www.caliburnproject.org"
+        xmlns:converters="clr-namespace:OpticalFiberApplication.Converters"
         cal:Message.Attach="[Event Loaded] = [Action Loaded]"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance local:MainWindowViewModel}"
         Title="MainWindow" Height="650" Width="800" MinHeight="500" MinWidth="600">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <converters:BoolToInvertConverter x:Key="BoolToInvertConverter" />
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid>
         <StackPanel>
             <StackPanel Margin="10">
@@ -25,8 +32,21 @@
                 <GroupBox Header="参数配置">
                     <StackPanel Margin="10,10,10,0">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock VerticalAlignment="Center" MinWidth="60" Margin="0,0,20,0">使能数量</TextBlock>
+                            <ComboBox MinWidth="80" SelectedIndex="{Binding EnableChannelCount}">
+                                <ComboBoxItem Content="0"/>
+                                <ComboBoxItem Content="1"/>
+                                <ComboBoxItem Content="2"/>
+                                <ComboBoxItem Content="3"/>
+                                <ComboBoxItem Content="4"/>
+                                <ComboBoxItem Content="5"/>
+                                <ComboBoxItem Content="6"/>
+                                <ComboBoxItem Content="7"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <TextBlock VerticalAlignment="Center" MinWidth="60" Margin="0,0,20,0">基准通道</TextBlock>
-                            <ComboBox MinWidth="80" SelectedIndex="{Binding DatumChannel}">
+                            <ComboBox MinWidth="80" SelectedIndex="{Binding DatumChannel, Mode=TwoWay}">
                                 <ComboBoxItem Content="0"/>
                                 <ComboBoxItem Content="1"/>
                                 <ComboBoxItem Content="2"/>
@@ -39,20 +59,7 @@
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <TextBlock VerticalAlignment="Center" MinWidth="60" Margin="0,0,20,0">触发通道</TextBlock>
-                            <ComboBox MinWidth="80" SelectedIndex="{Binding TriggerChannel}">
-                                <ComboBoxItem Content="0"/>
-                                <ComboBoxItem Content="1"/>
-                                <ComboBoxItem Content="2"/>
-                                <ComboBoxItem Content="3"/>
-                                <ComboBoxItem Content="4"/>
-                                <ComboBoxItem Content="5"/>
-                                <ComboBoxItem Content="6"/>
-                                <ComboBoxItem Content="7"/>
-                            </ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock VerticalAlignment="Center" MinWidth="60" Margin="0,0,20,0">使能数量</TextBlock>
-                            <ComboBox MinWidth="80" SelectedIndex="{Binding EnableChannelCount}">
+                            <ComboBox MinWidth="80" SelectedIndex="{Binding TriggerChannel}" IsEnabled="False">
                                 <ComboBoxItem Content="0"/>
                                 <ComboBoxItem Content="1"/>
                                 <ComboBoxItem Content="2"/>
@@ -74,7 +81,7 @@
                             <TextBlock VerticalAlignment="Center" MinWidth="60" Margin="20,0,20,0">公式: 距离(mm) = 电压(mV) * 比例参数</TextBlock>
                         </StackPanel>
                     </StackPanel>
-                   
+
                 </GroupBox>
             </StackPanel>
             <StackPanel Margin="10,0,10,10">
@@ -93,14 +100,38 @@
                                 <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock MinWidth="60" VerticalAlignment="Center">使能:</TextBlock>
-                            <Rectangle MaxWidth="20" Grid.Column="1" Margin="5,0" Fill="{Binding ChannelColor0}"/>
-                            <Rectangle MaxWidth="20" Grid.Column="2" Margin="5,0" Fill="{Binding ChannelColor1}"/>
-                            <Rectangle MaxWidth="20" Grid.Column="3" Margin="5,0" Fill="{Binding ChannelColor2}"/>
-                            <Rectangle MaxWidth="20" Grid.Column="4" Margin="5,0" Fill="{Binding ChannelColor3}"/>
-                            <Rectangle MaxWidth="20" Grid.Column="5" Margin="5,0" Fill="{Binding ChannelColor4}"/>
-                            <Rectangle MaxWidth="20" Grid.Column="6" Margin="5,0" Fill="{Binding ChannelColor5}"/>
-                            <Rectangle MaxWidth="20" Grid.Column="7" Margin="5,0" Fill="{Binding ChannelColor6}"/>
-                            <Rectangle MaxWidth="20" Grid.Column="8" Margin="5,0" Fill="{Binding ChannelColor7}"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">通道0</TextBlock>
+                                <Rectangle Height="20" Width="20" Margin="5" Fill="{Binding ChannelColor0}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">通道1</TextBlock>
+                                <Rectangle Height="20" Width="20" Margin="5" Fill="{Binding ChannelColor1}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3">
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">通道2</TextBlock>
+                                <Rectangle Height="20" Width="20" Margin="5" Fill="{Binding ChannelColor2}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">通道3</TextBlock>
+                                <Rectangle Height="20" Width="20" Margin="5" Fill="{Binding ChannelColor3}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="5">
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">通道4</TextBlock>
+                                <Rectangle Height="20" Width="20" Margin="5" Fill="{Binding ChannelColor4}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="6">
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">通道5</TextBlock>
+                                <Rectangle Height="20" Width="20" Margin="5" Fill="{Binding ChannelColor5}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="7">
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">通道6</TextBlock>
+                                <Rectangle Height="20" Width="20" Margin="5" Fill="{Binding ChannelColor6}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="8">
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">通道7</TextBlock>
+                                <Rectangle Height="20" Width="20" Margin="5" Fill="{Binding ChannelColor7}"/>
+                            </StackPanel>
                         </Grid>
                         <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
@@ -196,9 +227,9 @@
                 <GroupBox Header="控制">
                     <StackPanel Margin="10">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <Button cal:Message.Attach="StartOneshot" MinWidth="80" Margin="0,0,20,0">单次采集</Button>
-                            <Button MinWidth="80" Margin="0,0,20,0">触发采集</Button>
-                            <Button MinWidth="80" Margin="0,0,20,0">停止</Button>
+                            <Button cal:Message.Attach="StartOneshot" IsEnabled="{Binding IsMesurig, Converter={StaticResource BoolToInvertConverter}}" MinWidth="80" Margin="0,0,20,0">单次采集</Button>
+                            <Button cal:Message.Attach="StartTrigger" IsEnabled="{Binding IsMesurig, Converter={StaticResource BoolToInvertConverter}}" MinWidth="80" Margin="0,0,20,0">触发采集</Button>
+                            <Button cal:Message.Attach="StopTrigger" IsEnabled="{Binding IsMesurig}" MinWidth="80" Margin="0,0,20,0">停止</Button>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
